@@ -54,11 +54,15 @@ clearos_load_language('policy_manager');
 
 use \clearos\apps\base\Engine as Engine;
 use \clearos\apps\groups\Group_Manager_Factory as Group_Manager_Factory;
-use \clearos\apps\ldap\LDAP_Factory as LDAP_Factory;
+use \clearos\apps\openldap\LDAP_Driver as LDAP_Driver;
+use \clearos\apps\openldap_directory\OpenLDAP as OpenLDAP;
+use \clearos\apps\policy_manager\Policy as Policy;
 
 clearos_load_library('base/Engine');
 clearos_load_library('groups/Group_Manager_Factory');
-clearos_load_library('ldap/LDAP_Factory');
+clearos_load_library('openldap/LDAP_Driver');
+clearos_load_library('openldap_directory/OpenLDAP');
+clearos_load_library('policy_manager/Policy');
 
 ///////////////////////////////////////////////////////////////////////////////
 // C L A S S
@@ -79,6 +83,12 @@ clearos_load_library('ldap/LDAP_Factory');
 class Policy_Manager extends Engine
 {
     ///////////////////////////////////////////////////////////////////////////////
+    // V A R I A B L E S
+    ///////////////////////////////////////////////////////////////////////////////
+
+    protected $ldaph = NULL;
+
+    ///////////////////////////////////////////////////////////////////////////////
     // M E T H O D S
     ///////////////////////////////////////////////////////////////////////////////
 
@@ -92,33 +102,18 @@ class Policy_Manager extends Engine
     }
 
     /**
-     * Adds a policy.
-     *
-     * @return void
-     * @throws Engine_Exception
-     */
-
-    public function add($policy, $group)
-    {
-        clearos_profile(__METHOD__, __LINE__);
-
-        $ldap = LDAP_Factory::create();
-        $ldaph = $ldap->get_ldap_handle();
-echo "hello - $policy - $group";
-die();
-    }
-
-    /**
      * Returns possible systems groups.
      *
-     * @param string $add_group add group to possible list
+     * @param string $app app name
      *
      * @return array list of possible system groups
      */
 
-    public function get_available_groups()
+    public function get_available_groups($app)
     {
         clearos_profile(__METHOD__, __LINE__);
+
+        Validation_Exception::is_valid($this->validate_app($app));
 
         $group_manager = Group_Manager_Factory::create();
 
@@ -126,7 +121,7 @@ die();
         $configured_groups = array();
 
         $all_groups = $group_manager->get_list();
-        $policies = $this->get_policies();
+        $policies = $this->get_policies($app);
 
         foreach ($policies as $policy)
             $configured_groups[] = $policy['group'];
@@ -142,20 +137,85 @@ die();
     /**
      * Return an array of all policies.
      *
+     * @param string $app app name
+     *
      * @return array policy information.
      * @throws Engine_Exception
      */
 
-    public function get_policies()
+    public function get_policies($app)
     {
         clearos_profile(__METHOD__, __LINE__);
 
+        Validation_Exception::is_valid($this->validate_app($app));
+
+        // Get LDAP handle
+        //----------------
+
+        if ($this->ldaph === NULL)
+            $this->_get_ldap_handle();
+
+        // Search for policies in LDAP
+        //----------------------------
+
         $policies = array();
+        $priorities = array();
 
-        // FIXME
-        // $policies['custom1']['group'] = 'testgroup';
+        $policy_dn = 'ou=' . $app . ',' . $this->_get_policies_container();
 
-        return $policies;
+        if (! $this->ldaph->exists($policy_dn))
+            return array();
+
+        $result = $this->ldaph->search(
+            "(objectclass=clearPolicy)",
+            $policy_dn
+        );
+
+        $entry = $this->ldaph->get_first_entry($result);
+
+        while ($entry) {
+            $attributes = $this->ldaph->get_attributes($entry);
+
+            $name = $attributes['clearPolicyName'][0];
+
+            $details = array();
+            $details['group'] = $attributes['clearPolicyGroup'][0];
+            $details['description'] = $attributes['clearPolicyDescription'][0];
+            $details['priority'] = empty($attributes['clearPolicyPriority'][0]) ? Policy::DEFAULT_PRIORITY : $attributes['clearPolicyPriority'][0];
+
+            $policies[$name] = $details;
+            $priorities[$details['priority']][] = $name;
+
+            $entry = $this->ldaph->next_entry($entry);
+        }
+
+        // Add impled global group if not defined in LDAP
+        //-----------------------------------------------
+
+        /*
+        if (empty($policies['global'])) {
+            $policies['global']['group'] = $app . '_plugin';
+            $policies['global']['description'] = 'Global'; // FIXME review, translate
+            $policies['global']['priority'] = 0;
+
+            $priorities[0][] = 'global';
+        }
+        */
+
+        // Sort by priority
+        //-----------------
+
+        $sorted_policies = array();
+
+        ksort($priorities);
+
+        foreach ($priorities as $priority => $list) {
+            sort($list);  // Alphabetic if same policy priority
+            foreach ($list as $name)
+                $sorted_policies[$name] = $policies[$name];
+        }
+
+        return $sorted_policies;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -163,37 +223,54 @@ die();
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Validates system group.
+     * Validates app name.
      *
-     * @param string $group system group name
+     * @param string $app app name
      *
-     * @return string error message if system group name is invalid
+     * @return string error message if app is invalid
      */
 
-    public function validate_group($group)
+    public function validate_app($app)
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        $group_manager = Group_Manager_Factory::create();
-        $all_groups = $group_manager->get_list();
+        // return lang('policy_manager_app_invalid');
+    }
 
-        if (! in_array($group, $all_groups))
-            return lang('groups_group_name_invalid');
+    ///////////////////////////////////////////////////////////////////////////////
+    // P R I V A T E   M E T H O D S
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Creates an LDAP handle.
+     *
+     * @access private
+     *
+     * @return void
+     * @throws Engine_Exception
+     */
+
+    protected function _get_ldap_handle()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $ldap = new LDAP_Driver();
+        $this->ldaph = $ldap->get_ldap_handle();
     }
 
     /**
-     * Validates policy name.
+     * Returns policies container.
      *
-     * @param string $name policy name
-     *
-     * @return string error message if policy name is invalid
+     * @return string policies container
+     * @throws Engine_Exception
      */
 
-    public function validate_policy_name($name)
+    protected function _get_policies_container()
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        if (!preg_match('/^[a-z0-9_\-]+$/', $name))
-            return lang('groups_policy_name_invalid');
+        $base_dn = OpenLDAP::get_base_dn();
+
+        return 'ou=Policies,' . $base_dn;
     }
 }

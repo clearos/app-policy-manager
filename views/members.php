@@ -37,14 +37,26 @@ $this->lang->load('groups');
 $this->lang->load('users');
 
 ///////////////////////////////////////////////////////////////////////////////
-// Buttons
+// Warning about allusers group
 ///////////////////////////////////////////////////////////////////////////////
 
 $group_name = $group_info['core']['group_name'];
 $safe_group_name = strtr($group_name, '$ ', '~:'); // spaces and dollars not allowed, so munge
-
 $base_app = '/app/' . $basename . '/policy';
 $form = $basename . '/policy/edit_members/' . $safe_group_name;
+
+if ($group_name === 'allusers') {
+    echo infobox_warning(
+        lang('base_warning'),
+        lang('policy_manager_allusers_warning') . "<br><p align='center'>" . anchor_cancel($base_app) . "</p>"
+    );
+    return;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Buttons
+///////////////////////////////////////////////////////////////////////////////
+
 
 if ($mode === 'view') {
     $buttons = array(anchor_cancel($base_app));

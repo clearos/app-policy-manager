@@ -29,5 +29,6 @@ $app['menu_enabled'] = FALSE;
 $app['core_requires'] = array(
     'app-central-management-core',
     'app-groups-core >= 1:1.4.22',
+    'app-openldap-core >= 1:1.4.40',
     'app-ldap-core',
 );

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Policy groups view.
+ * Policy overview.
  *
  * @category   apps
  * @package    policy-manager
@@ -33,15 +33,15 @@
 // Load dependencies
 ///////////////////////////////////////////////////////////////////////////////
 
-$this->lang->load('groups');
+$this->lang->load('policy_manager');
 
 ///////////////////////////////////////////////////////////////////////////////
 // Headers
 ///////////////////////////////////////////////////////////////////////////////
 
 $headers = array(
-    lang('groups_policy_name'),
-    lang('groups_group'),
+    lang('policy_manager_policy_name'),
+    lang('policy_manager_group'),
 );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,24 +54,29 @@ $anchors = array(anchor_add('/app/' . $basename . '/policy/add'));
 // Items
 ///////////////////////////////////////////////////////////////////////////////
 
-foreach ($groups as $id => $details) {
+foreach ($policies as $name => $details) {
+
+    $detail_buttons = array(anchor_custom('/app/' . $basename . '/policy/configure/' . $name, lang('base_configure')));
 
     if ($mode === 'view') {
-        $anchor = '/app/' . $basename . '/policy/view_members/' . $details['core']['group_name'];
-        $detail_buttons = array(anchor_custom($anchor, lang('groups_view_members')));
+        $anchor = '/app/' . $basename . '/policy/view_members/' . $details['group'];
+        $detail_buttons[] = anchor_custom($anchor, lang('groups_view_members'));
     } else {
-        $anchor = '/app/' . $basename . '/policy/edit_members/' . $details['core']['group_name'];
-        $detail_buttons = array(anchor_custom($anchor, lang('groups_edit_members')));
+        $anchor = '/app/' . $basename . '/policy/edit_members/' . $details['group'];
+        $detail_buttons[] = anchor_custom($anchor, lang('groups_edit_members'));
     }
 
-    $policy_name = empty($details['core']['description']) ? lang('groups_global_policy') : $details['core']['description'];
+    if ($name !== 'global') {
+        $detail_buttons[] = anchor_edit('/app/' . $basename . '/policy/edit/' . $name);
+        $detail_buttons[] = anchor_delete('/app/' . $basename . '/policy/delete/' . $name);
+    }
 
-    $item['title'] = $details['core']['group_name'];
+    $item['title'] = $name;
     $item['action'] = $anchor;
     $item['anchors'] = button_set($detail_buttons);
     $item['details'] = array(
-        $policy_name,
-        $details['core']['group_name']
+        $details['description'],
+        $details['group']
     );
 
     $items[] = $item;
