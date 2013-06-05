@@ -1,7 +1,7 @@
 
 Name: app-policy-manager
 Epoch: 1
-Version: 1.4.22
+Version: 1.4.0
 Release: 1%{dist}
 Summary: Policy Manager
 License: Proprietary
@@ -19,8 +19,8 @@ Summary: Policy Manager - Core
 License: Proprietary
 Group: ClearOS/Libraries
 Requires: app-base-core
-Requires: app-central-management-core
 Requires: app-groups-core >= 1:1.4.22
+Requires: app-openldap-core >= 1:1.4.40
 Requires: app-ldap-core
 
 %description core

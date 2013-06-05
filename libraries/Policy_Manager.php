@@ -52,17 +52,25 @@ clearos_load_language('policy_manager');
 // D E P E N D E N C I E S
 ///////////////////////////////////////////////////////////////////////////////
 
+// Classes
+//--------
+
 use \clearos\apps\base\Engine as Engine;
 use \clearos\apps\groups\Group_Manager_Factory as Group_Manager_Factory;
 use \clearos\apps\openldap\LDAP_Driver as LDAP_Driver;
-use \clearos\apps\openldap_directory\OpenLDAP as OpenLDAP;
 use \clearos\apps\policy_manager\Policy as Policy;
 
 clearos_load_library('base/Engine');
 clearos_load_library('groups/Group_Manager_Factory');
 clearos_load_library('openldap/LDAP_Driver');
-clearos_load_library('openldap_directory/OpenLDAP');
 clearos_load_library('policy_manager/Policy');
+
+// Exceptions
+//-----------
+
+use \clearos\apps\base\Validation_Exception as Validation_Exception;
+
+clearos_load_library('base/Validation_Exception');
 
 ///////////////////////////////////////////////////////////////////////////////
 // C L A S S
@@ -269,7 +277,8 @@ class Policy_Manager extends Engine
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        $base_dn = OpenLDAP::get_base_dn();
+        $ldap = new LDAP_Driver();
+        $base_dn = $ldap->get_base_dn();
 
         return 'ou=Policies,' . $base_dn;
     }
