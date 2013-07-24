@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 $app['basename'] = 'policy_manager';
-$app['version'] = '1.4.0';
+$app['version'] = '1.4.70';
 $app['release'] = '1';
 $app['vendor'] = 'ClearCenter';
 $app['packager'] = 'ClearCenter';
@@ -28,6 +28,6 @@ $app['menu_enabled'] = FALSE;
 
 $app['core_requires'] = array(
     'app-groups-core >= 1:1.4.22',
-    'app-openldap-core >= 1:1.4.40',
+    'app-openldap-core >= 1:1.4.70',
     'app-ldap-core',
 );
