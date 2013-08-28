@@ -1,7 +1,7 @@
 
 Name: app-policy-manager
 Epoch: 1
-Version: 1.4.70
+Version: 1.5.0
 Release: 1%{dist}
 Summary: Policy Manager
 License: Proprietary
