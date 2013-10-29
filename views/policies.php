@@ -56,15 +56,7 @@ $anchors = array(anchor_add('/app/' . $basename . '/policy/add'));
 
 foreach ($policies as $name => $details) {
 
-    $detail_buttons = array(anchor_custom('/app/' . $basename . '/policy/configure/' . $name, lang('base_configure')));
-
-    if ($mode === 'view') {
-        $anchor = '/app/' . $basename . '/policy/view_members/' . $details['group'];
-        $detail_buttons[] = anchor_custom($anchor, lang('groups_view_members'));
-    } else {
-        $anchor = '/app/' . $basename . '/policy/edit_members/' . $details['group'];
-        $detail_buttons[] = anchor_custom($anchor, lang('groups_edit_members'));
-    }
+    $detail_buttons = array(anchor_custom('/app/' . $basename . '/policy/configure/' . $name, lang('base_configure_policy')));
 
     if ($name !== 'global') {
         $detail_buttons[] = anchor_edit('/app/' . $basename . '/policy/edit/' . $name);
