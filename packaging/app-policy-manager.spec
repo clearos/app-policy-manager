@@ -3,7 +3,7 @@ Name: app-policy-manager
 Epoch: 1
 Version: 1.5.10
 Release: 1%{dist}
-Summary: Policy Manager
+Summary: **policy_manager_app_name**
 License: Proprietary
 Group: ClearOS/Apps
 Source: %{name}-%{version}.tar.gz
@@ -12,10 +12,10 @@ Requires: %{name}-core = 1:%{version}-%{release}
 Requires: app-base
 
 %description
-The Policy Manager app provides the engine for deploying specific app policies to specific groups.
+**policy_manager_app_description**
 
 %package core
-Summary: Policy Manager - Core
+Summary: **policy_manager_app_name** - Core
 License: Proprietary
 Group: ClearOS/Libraries
 Requires: app-base-core
@@ -24,7 +24,7 @@ Requires: app-openldap-core >= 1:1.4.70
 Requires: app-ldap-core
 
 %description core
-The Policy Manager app provides the engine for deploying specific app policies to specific groups.
+**policy_manager_app_description**
 
 This package provides the core API and libraries.
 
